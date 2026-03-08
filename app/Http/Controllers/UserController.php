@@ -4,8 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage; 
+use App\Models\Portofolio; 
+use App\Models\PortofolioImage;
 use App\Models\Profile;
-use Illuminate\Support\Facades\Storage; // Tambahkan di bagian atas file
+
+
 
 class UserController extends Controller
 {
@@ -24,12 +29,14 @@ class UserController extends Controller
     /**
      * Menampilkan Halaman Portofolio
      */
-    public function portofolios_user()
+   public function portofolios_user()
     {
-        // Mengambil portofolio milik user yang login
-        // $portfolios = Auth::user()->portfolios()->latest()->get();
+        // Mengambil semua portofolio milik user yang sedang login
+        // Diurutkan dari yang terbaru (latest)
+        $portfolios = Auth::user()->portfolios()->latest()->get();
         
-        return view('user.portofolios');
+        // Kirim data ke view user/portofolios.blade.php
+        return view('user.portofolios', compact('portfolios'));
     }
 
     /**
@@ -168,5 +175,91 @@ public function update_photo(Request $request)
 
     return redirect()->back()->with('success', 'Foto profil berhasil diperbarui!');
 }
+
+public function portofolio_store(Request $request)
+{
+    $request->validate([
+        'images.*' => 'image|mimes:jpeg,png,jpg|max:2048', // Validasi tiap file
+    ]);
+
+    // 1. Simpan data utama portofolio
+    $portfolio = Portofolio::create([
+        'user_id' => Auth::id(),
+        'title' => $request->title,
+        'slug' => Str::slug($request->title) . '-' . time(),
+        'category' => $request->category,
+        'subcategory' => $request->subcategory,
+        'description' => $request->description,
+    ]);
+
+    // 2. Simpan banyak gambar jika ada
+    if ($request->hasFile('images')) {
+        foreach ($request->file('images') as $file) {
+            $path = $file->store('portfolios', 'public');
+            $portfolio->images()->create(['image_path' => $path]);
+        }
+    }
+
+    return redirect()->back()->with('success', 'Karya berhasil dipublish dengan galeri foto!');
+}
+
+/**
+ * Menghapus Portofolio
+ */
+public function portofolio_delete($id)
+{
+    $portfolio = Portofolio::with('images')->where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+
+    foreach ($portfolio->images as $img) {
+    Storage::disk('public')->delete($img->image_path);
+    }
+
+    $portfolio->delete(); // Data di tabel portfolio_images otomatis hapus karena onDelete('cascade')
+    return redirect()->back()->with('success', 'Karya dan semua file gambarnya berhasil dihapus.');
+}
+
+public function portofolio_update(Request $request, $id)
+{
+    $portfolio = Portofolio::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
+
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'category' => 'required|string',
+        'subcategory' => 'required|string',
+        'description' => 'required|string',
+        'project_url' => 'nullable|url',
+        'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+    ]);
+
+    $portfolio->update([
+        'title' => $request->title,
+        'category' => $request->category,
+        'subcategory' => $request->subcategory,
+        'description' => $request->description,
+        'project_url' => $request->project_url,
+    ]);
+
+    // Jika ada unggahan gambar baru
+    if ($request->hasFile('images')) {
+        // 1. Hapus SEMUA file fisik gambar lama dari storage
+        foreach ($portfolio->images as $oldImg) {
+            Storage::disk('public')->delete($oldImg->image_path);
+        }
+
+        // 2. Hapus SEMUA data gambar lama dari database (tabel portfolio_images)
+        $portfolio->images()->delete();
+
+        // 3. Simpan gambar-gambar yang baru diunggah
+        foreach ($request->file('images') as $file) {
+            $path = $file->store('portfolios', 'public');
+            $portfolio->images()->create([
+                'image_path' => $path
+            ]);
+        }
+    }
+
+    return redirect()->back()->with('success', 'Karya berhasil diperbarui!');
+}
+
 
 }

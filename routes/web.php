@@ -46,4 +46,8 @@ Route::middleware(['auth', 'role:user'])->prefix('user')->group(function () {
     Route::get('portofolios_user', [UserController::class, 'portofolios_user'])->name('user.portofolios_user');
     Route::delete('/profile/experience/{index}', [UserController::class, 'delete_experience'])->name('user.profile.experience.delete');
 
+        // Route untuk Kelola Portofolio
+    Route::post('/portofolio/store', [UserController::class, 'portofolio_store'])->name('user.portofolio.store');
+    Route::delete('/portofolio/delete/{id}', [UserController::class, 'portofolio_delete'])->name('user.portofolio.delete');
+    Route::put('/portofolio/update/{id}', [UserController::class, 'portofolio_update'])->name('user.portofolio.update');
 });

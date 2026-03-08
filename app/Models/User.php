@@ -49,7 +49,11 @@ class User extends Authenticatable
 
     public function profile()
     {
-        // User Memiliki Satu Profile
         return $this->hasOne(Profile::class);
     }
+
+    public function portfolios()
+{
+    return $this->hasMany(Portofolio::class, 'user_id');
+}
 }
