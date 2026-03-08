@@ -36,10 +36,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
 
 Route::middleware(['auth', 'role:user'])->prefix('user')->group(function () {
-    Route::get('user_dashboard', function () {
-        return view('user.dashboard'); 
-    })->name('user.dashboard');
     
+    Route::get('user_dashboard', [UserController::class, 'dashboard'])->name('user.dashboard');
+    
+    Route::post('/profile/photo', [UserController::class, 'update_photo'])->name('user.profile.photo');
+    Route::put('/profile/update', [UserController::class, 'update_profile'])->name('user.profile.update');
+    Route::post('/profile/skills', [UserController::class, 'update_skills'])->name('user.profile.skills');
+    Route::post('/profile/experience', [UserController::class, 'add_experience'])->name('user.profile.experience');
     Route::get('portofolios_user', [UserController::class, 'portofolios_user'])->name('user.portofolios_user');
+    Route::delete('/profile/experience/{index}', [UserController::class, 'delete_experience'])->name('user.profile.experience.delete');
 
 });
