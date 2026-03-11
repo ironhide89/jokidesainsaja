@@ -9,10 +9,9 @@ use App\Http\Controllers\LandingPageController;
 
 
 Route::get('/', [LandingPageController::class, 'index'])->name('landing');
-
-Route::get('/portofolio', function () {
-    return view('portofolio');
-})->name('portofolio');
+Route::get('/portofolio', [LandingPageController::class, 'portofolio_all'])->name('portofolio');
+Route::get('/portofolio/{slug}', [LandingPageController::class, 'portofolio_detail'])->name('portofolio.detail');
+Route::get('/profile/{id}', [LandingPageController::class, 'profile_detail'])->name('profile.detail');
 
 
 Route::middleware(['guest'])->group(function () {

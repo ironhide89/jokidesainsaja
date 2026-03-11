@@ -22,12 +22,10 @@
         @forelse ($portfolios as $item)
             <div class="col-md-4 mb-4">
                 <div class="card h-100 shadow-sm border-0 bg-dark text-white overflow-hidden">
-                    {{-- Badge Kategori --}}
                     <div class="position-absolute top-0 end-0 m-2 z-index-10">
                         <span class="badge bg-warning text-dark shadow-sm">{{ ucfirst($item->category) }}</span>
                     </div>
                     
-                    {{-- Preview Gambar: Mengambil gambar pertama dari relasi images --}}
                     <div class="ratio ratio-16x9">
                         @if($item->images->isNotEmpty())
                             <img src="{{ asset('storage/' . $item->images->first()->image_path) }}" class="card-img-top object-fit-cover" alt="{{ $item->title }}">
@@ -40,12 +38,14 @@
                         <h5 class="card-title text-warning fw-bold mb-1">{{ $item->title }}</h5>
                         <p class="text-info small mb-2 opacity-75">{{ str_replace('-', ' ', ucfirst($item->subcategory)) }}</p>
                         <p class="card-text text-muted small">{{ Str::limit($item->description, 100) }}</p>
+                        @if($item->project_url)
+                            <span class="badge bg-success-subtle text-success border border-success-subtle small">Live Preview Available</span>
+                        @endif
                     </div>
 
                     <div class="card-footer bg-transparent border-top border-secondary d-flex justify-content-between align-items-center py-3">
                         <small class="text-muted">{{ $item->created_at->diffForHumans() }}</small>
                         <div class="btn-group">
-                            {{-- Button Edit --}}
                             <button class="btn btn-sm btn-outline-warning" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#editPortfolioModal"
@@ -58,7 +58,6 @@
                                 data-images="{{ $item->images->toJson() }}">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            {{-- Button Hapus --}}
                             <button class="btn btn-sm btn-outline-danger" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#deletePortfolioModal" 
@@ -115,14 +114,27 @@
                             <label class="form-label small fw-bold text-warning">Deskripsi</label>
                             <textarea name="description" class="form-control bg-dark border-secondary text-white shadow-none" rows="3" required></textarea>
                         </div>
+
+                        {{-- URL LOGIC --}}
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-warning">Link URL</label>
-                            <input type="url" name="project_url" class="form-control bg-dark border-secondary text-white shadow-none">
+                            <label class="form-label small fw-bold text-warning d-block">Ada Link Preview?</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input urlToggle" type="radio" name="has_url" value="yes" id="urlYesAdd">
+                                <label class="form-check-label text-white small" for="urlYesAdd">Ada</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input urlToggle" type="radio" name="has_url" value="no" id="urlNoAdd" checked>
+                                <label class="form-check-label text-white small" for="urlNoAdd">Tidak Ada</label>
+                            </div>
                         </div>
+                        <div class="mb-3 d-none urlInputContainer">
+                            <label class="form-label small fw-bold text-warning">Link URL</label>
+                            <input type="url" name="project_url" class="form-control bg-dark border-secondary text-white shadow-none" placeholder="https://example.com">
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-warning">Upload Foto (Bisa pilih banyak)</label>
                             <input type="file" name="images[]" class="form-control bg-dark border-secondary text-white shadow-none" accept="image/*" multiple required>
-                            <div class="form-text text-muted small mt-1 italic">Pilih satu atau lebih gambar karya Anda.</div>
                         </div>
                     </div>
                     <div class="modal-footer border-top border-secondary border-opacity-10">
@@ -161,7 +173,6 @@
                             <div class="col-md-6 mb-3">
                                 <label class="small fw-bold text-warning">Jenis Layanan</label>
                                 <select name="subcategory" id="editSubcategory" class="form-select bg-dark border-secondary text-white subCategorySelector shadow-none" required>
-                                    {{-- Diisi via JS --}}
                                 </select>
                             </div>
                         </div>
@@ -169,23 +180,33 @@
                             <label class="small fw-bold text-warning">Deskripsi</label>
                             <textarea name="description" id="editDescription" class="form-control bg-dark border-secondary text-white shadow-none" rows="3" required></textarea>
                         </div>
+
+                        {{-- URL LOGIC EDIT --}}
                         <div class="mb-3">
+                            <label class="form-label small fw-bold text-warning d-block">Ada Link Preview?</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input urlToggle" type="radio" name="has_url_edit" value="yes" id="urlYesEdit">
+                                <label class="form-check-label text-white small" for="urlYesEdit">Ada</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input urlToggle" type="radio" name="has_url_edit" value="no" id="urlNoEdit">
+                                <label class="form-check-label text-white small" for="urlNoEdit">Tidak Ada</label>
+                            </div>
+                        </div>
+                        <div class="mb-3 d-none urlInputContainer">
                             <label class="small fw-bold text-warning">Link URL</label>
                             <input type="url" name="project_url" id="editUrl" class="form-control bg-dark border-secondary text-white shadow-none">
                         </div>
                         
-                        {{-- PREVIEW GAMBAR LAMA --}}
                         <div class="mb-3">
-                            <label class="small fw-bold text-warning mb-2 d-block">Foto Saat Ini (Akan diganti jika upload baru)</label>
+                            <label class="small fw-bold text-warning mb-2 d-block">Foto Saat Ini</label>
                             <div id="editImagesPreview" class="d-flex flex-wrap gap-2 p-2 bg-black bg-opacity-25 rounded border border-secondary border-opacity-10 min-vh-10">
-                                {{-- Rendered by JS --}}
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="small fw-bold text-warning">Upload Foto Baru (Opsional)</label>
                             <input type="file" name="images[]" class="form-control bg-dark border-secondary text-white shadow-none" accept="image/*" multiple>
-                            <div class="form-text text-muted small italic">Mengupload foto baru akan menghapus semua foto lama untuk karya ini.</div>
                         </div>
                     </div>
                     <div class="modal-footer border-top border-secondary border-opacity-10">
@@ -240,7 +261,21 @@
         }
     }
 
-    // Trigger perubahan subkategori di semua form
+    // Toggle URL Input
+    document.querySelectorAll('.urlToggle').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const container = this.closest('form').querySelector('.urlInputContainer');
+            const input = container.querySelector('input');
+            if (this.value === 'yes') {
+                container.classList.remove('d-none');
+            } else {
+                container.classList.add('d-none');
+                input.value = ''; // Reset nilai jadi kosong jika memilih "Tidak Ada"
+            }
+        });
+    });
+
+    // Trigger perubahan subkategori
     document.querySelectorAll('.mainCategorySelector').forEach(select => {
         select.addEventListener('change', function() {
             const subSelect = this.closest('form').querySelector('.subCategorySelector');
@@ -253,42 +288,44 @@
     editModal.addEventListener('show.bs.modal', function (event) {
         const btn = event.relatedTarget;
         const previewContainer = document.getElementById('editImagesPreview');
+        const urlInputContainer = this.querySelector('.urlInputContainer');
+        const projectUrl = btn.getAttribute('data-url');
         
-        // 1. Reset Preview
         previewContainer.innerHTML = '';
         
-        // 2. Set Action Form & Isi Input Text
         document.getElementById('editPortfolioForm').action = `/user/portofolio/update/${btn.getAttribute('data-id')}`;
         document.getElementById('editTitle').value = btn.getAttribute('data-title');
         document.getElementById('editDescription').value = btn.getAttribute('data-description');
-        document.getElementById('editUrl').value = btn.getAttribute('data-url');
+        document.getElementById('editUrl').value = projectUrl;
         
-        // 3. Set Dropdown Kategori & Subkategori
+        // Handle URL Radio in Edit
+        if (projectUrl && projectUrl !== 'null' && projectUrl !== '') {
+            document.getElementById('urlYesEdit').checked = true;
+            urlInputContainer.classList.remove('d-none');
+        } else {
+            document.getElementById('urlNoEdit').checked = true;
+            urlInputContainer.classList.add('d-none');
+            document.getElementById('editUrl').value = '';
+        }
+
         const cat = btn.getAttribute('data-category');
         const sub = btn.getAttribute('data-subcategory');
         document.getElementById('editCategory').value = cat;
         populateSub(cat, document.getElementById('editSubcategory'), sub);
 
-        // 4. Render Preview Gambar yang ada di database
         const imagesData = btn.getAttribute('data-images');
         if (imagesData) {
             const images = JSON.parse(imagesData);
             if (images.length > 0) {
                 images.forEach(img => {
-                    const imgHtml = `
-                        <div class="position-relative">
-                            <img src="/storage/${img.image_path}" class="rounded object-fit-cover shadow-sm border border-secondary border-opacity-25" style="width: 70px; height: 70px;">
-                        </div>
-                    `;
-                    previewContainer.innerHTML += imgHtml;
+                    previewContainer.innerHTML += `<img src="/storage/${img.image_path}" class="rounded object-fit-cover shadow-sm border border-secondary border-opacity-25" style="width: 70px; height: 70px;">`;
                 });
             } else {
-                previewContainer.innerHTML = '<small class="text-muted italic p-2">Tidak ada foto dalam galeri.</small>';
+                previewContainer.innerHTML = '<small class="text-muted italic p-2">Tidak ada foto.</small>';
             }
         }
     });
 
-    // Handle Logic Modal Hapus
     const deleteModal = document.getElementById('deletePortfolioModal');
     deleteModal.addEventListener('show.bs.modal', function (event) {
         const btn = event.relatedTarget;

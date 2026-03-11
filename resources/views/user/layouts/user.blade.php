@@ -14,6 +14,7 @@
     
     <style>
         :root {
+            --sidebar-width: 280px;
             --sidebar-bg: #0f172a; /* Slate 900 */
             --body-bg: #020617;    /* Slate 950 */
             --card-bg: #1e293b;    /* Slate 800 */
@@ -27,16 +28,23 @@
             background-color: var(--body-bg);
             color: #f1f5f9;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
-        /* === Sidebar Style === */
+        /* === Sidebar Fixed Style === */
         .sidebar {
-            width: 280px;
+            width: var(--sidebar-width);
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            
+            /* Sidebar Diam */
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            height: 100vh;
+            z-index: 1030;
         }
 
         .sidebar .nav-link {
@@ -48,17 +56,18 @@
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
+            text-decoration: none;
         }
 
         .sidebar .nav-link:hover {
             background-color: rgba(250, 204, 21, 0.1);
-            color: var(--accent-color);
+            color: var(--accent-color) !important;
             transform: translateX(4px);
         }
 
         .sidebar .nav-link.active {
             background-color: var(--accent-color);
-            color: #0f172a;
+            color: #0f172a !important;
             font-weight: 600;
             box-shadow: 0 4px 15px rgba(250, 204, 21, 0.3);
         }
@@ -68,12 +77,16 @@
             margin-right: 12px;
         }
 
-        /* === Main Layout === */
+        /* === Main Content Adjustment === */
         #main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             min-width: 0;
+            
+            /* Ruang agar tidak tertutup sidebar fixed */
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
         }
 
         .topbar {
@@ -83,6 +96,20 @@
             height: 70px;
         }
 
+        /* Responsif untuk Mobile */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            #main-content {
+                margin-left: 0;
+            }
+            .offcanvas.sidebar {
+                transform: translateX(0);
+                position: fixed;
+            }
+        }
+
         /* === Card Modern Style === */
         .card {
             background-color: var(--card-bg);
@@ -90,12 +117,6 @@
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease;
-        }
-
-        .card-header {
-            background-color: transparent !important;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1.25rem;
         }
 
         /* === Custom Components === */
@@ -114,26 +135,12 @@
             border-radius: 10px;
             padding-left: 40px;
         }
-
-        .btn-warning {
-            background-color: var(--accent-color);
-            border: none;
-            font-weight: 600;
-            color: #0f172a;
-            border-radius: 10px;
-        }
-
-        .btn-warning:hover {
-            background-color: #eab308;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(250, 204, 21, 0.4);
-        }
     </style>
 </head>
 <body class="d-flex">
 
-    {{-- Sidebar Desktop --}}
-    <aside class="sidebar d-none d-lg-flex flex-column py-4">
+    {{-- Sidebar Fixed --}}
+    <aside class="sidebar d-none d-lg-flex flex-column py-4 shadow">
         <div class="px-4 mb-4">
             <a href="{{ route('user.dashboard') }}" class="text-decoration-none d-flex align-items-center">
                 <div class="bg-warning rounded-3 p-2 me-2">
@@ -142,7 +149,9 @@
                 <span class="fs-4 fw-bold text-white tracking-tight">JokiDesain</span>
             </a>
         </div>
-        @include('user.partials.sidebar-menu')
+        <div class="flex-grow-1 overflow-auto">
+            @include('user.partials.sidebar-menu')
+        </div>
     </aside>
 
     {{-- Mobile Offcanvas --}}
@@ -157,6 +166,7 @@
     </div>
     
     <div id="main-content">
+        {{-- Topbar Sticky --}}
         <nav class="navbar navbar-expand sticky-top topbar px-4">
             <div class="container-fluid p-0">
                 <button class="btn d-lg-none text-white p-0 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
@@ -165,7 +175,7 @@
                 
                 <div class="position-relative d-none d-md-block">
                     <i class="bi bi-search position-absolute top-50 translate-middle-y ms-3 text-muted"></i>
-                    <input class="form-control search-input" type="search" placeholder="Cari data portofolio...">
+                    <input class="form-control search-input shadow-none" type="search" placeholder="Cari data portofolio...">
                 </div>
                 
                 <div class="dropdown ms-auto">
@@ -174,16 +184,16 @@
                             <p class="mb-0 fw-semibold small text-white">{{ Auth::user()->name }}</p>
                             <span class="badge bg-soft-warning text-warning border border-warning" style="font-size: 0.65rem; background: rgba(250,204,21,0.1)">USER PRO</span>
                         </div>
-                        <img src="https://ui-avatars.com/api/?name={{ Auth::user()->name }}&background=facc15&color=0f172a" alt="avatar" class="avatar">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=facc15&color=0f172a" alt="avatar" class="avatar shadow-sm">
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end border-0 shadow-lg mt-3" style="background: #1e293b; border-radius: 12px;">
-                        <li><a class="dropdown-item py-2" href="#"><i class="bi bi-person me-2"></i> Profile</a></li>
-                        <li><a class="dropdown-item py-2" href="#"><i class="bi bi-gear me-2"></i> Settings</a></li>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end border-0 shadow-lg mt-3 p-2" style="background: #1e293b; border-radius: 12px;">
+                        <li><a class="dropdown-item py-2 rounded-2" href="#"><i class="bi bi-person me-2"></i> Profile</a></li>
+                        <li><a class="dropdown-item py-2 rounded-2" href="#"><i class="bi bi-gear me-2"></i> Settings</a></li>
                         <li><hr class="dropdown-divider opacity-10"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="dropdown-item py-2 text-danger">
+                                <button type="submit" class="dropdown-item py-2 rounded-2 text-danger">
                                     <i class="bi bi-box-arrow-right me-2"></i> Logout
                                 </button>
                             </form>

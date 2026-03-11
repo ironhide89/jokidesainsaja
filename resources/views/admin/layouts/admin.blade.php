@@ -12,8 +12,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-   <style>
+    <style>
         :root {
+            --sidebar-width: 280px;
             --sidebar-bg: #0f172a; /* Slate 900 */
             --body-bg: #020617;    /* Slate 950 */
             --card-bg: #1e293b;    /* Slate 800 */
@@ -27,16 +28,23 @@
             background-color: var(--body-bg);
             color: #f1f5f9;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
         /* === Sidebar Style === */
         .sidebar {
-            width: 280px;
+            width: var(--sidebar-width);
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            
+            /* Agar Sidebar Tidak Bergerak */
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            height: 100vh;
+            z-index: 1030; /* Di atas konten tapi di bawah modal/dropdown */
         }
 
         .sidebar .nav-link {
@@ -48,6 +56,7 @@
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
+            text-decoration: none;
         }
 
         .sidebar .nav-link:hover {
@@ -74,6 +83,10 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
+            
+            /* Memberi ruang agar konten tidak tertutup sidebar */
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
         }
 
         .topbar {
@@ -81,6 +94,21 @@
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
             height: 70px;
+        }
+
+        /* Responsif untuk Mobile */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(-100%); /* Sembunyikan sidebar di layar kecil */
+            }
+            #main-content {
+                margin-left: 0; /* Kembalikan margin ke 0 di mobile */
+            }
+            /* Jika offcanvas terbuka, tampilkan sidebar */
+            .offcanvas.sidebar {
+                transform: translateX(0);
+                position: fixed;
+            }
         }
 
         /* === Card Modern Style === */
@@ -132,8 +160,8 @@
 </head>
 <body class="d-flex">
 
-    {{-- Sidebar Desktop --}}
-    <aside class="sidebar d-none d-lg-flex flex-column py-4">
+    {{-- Sidebar Desktop (Fixed) --}}
+    <aside class="sidebar d-none d-lg-flex flex-column py-4 shadow">
         <div class="px-4 mb-4">
             <a href="{{ route('admin.dashboard') }}" class="text-decoration-none d-flex align-items-center">
                 <div class="bg-warning rounded-3 p-2 me-2">
@@ -142,10 +170,12 @@
                 <span class="fs-4 fw-bold text-white tracking-tight">AdminPanel</span>
             </a>
         </div>
-        @include('admin.partials.sidebar-menu')
+        <div class="flex-grow-1 overflow-auto">
+            @include('admin.partials.sidebar-menu')
+        </div>
     </aside>
 
-    {{-- Mobile Offcanvas --}}
+    {{-- Mobile Offcanvas Sidebar --}}
     <div class="offcanvas offcanvas-start sidebar p-3" tabindex="-1" id="sidebarMenu">
         <div class="offcanvas-header mb-3">
             <h5 class="offcanvas-title fw-bold text-warning">Admin Navigasi</h5>
@@ -156,7 +186,9 @@
         </div>
     </div>
     
+    {{-- Main Area --}}
     <div id="main-content">
+        {{-- Topbar --}}
         <nav class="navbar navbar-expand sticky-top topbar px-4">
             <div class="container-fluid p-0">
                 <button class="btn d-lg-none text-white p-0 me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
@@ -165,7 +197,7 @@
                 
                 <div class="position-relative d-none d-md-block">
                     <i class="bi bi-search position-absolute top-50 translate-middle-y ms-3 text-muted"></i>
-                    <input class="form-control search-input" type="search" placeholder="Cari data...">
+                    <input class="form-control search-input shadow-none" type="search" placeholder="Cari data...">
                 </div>
                 
                 <div class="dropdown ms-auto">
@@ -174,16 +206,16 @@
                             <p class="mb-0 fw-semibold small text-white">{{ Auth::user()->name }}</p>
                             <span class="badge bg-soft-danger text-danger border border-danger" style="font-size: 0.65rem; background: rgba(220,53,69,0.1)">ADMIN MODE</span>
                         </div>
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=facc15&color=0f172a" alt="avatar" class="avatar">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=facc15&color=0f172a" alt="avatar" class="avatar shadow-sm">
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end border-0 shadow-lg mt-3" style="background: #1e293b; border-radius: 12px;">
-                        <li><a class="dropdown-item py-2" href="#"><i class="bi bi-person me-2"></i> Profile</a></li>
-                        <li><a class="dropdown-item py-2" href="#"><i class="bi bi-gear me-2"></i> Settings</a></li>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end border-0 shadow-lg mt-3 p-2" style="background: #1e293b; border-radius: 12px;">
+                        <li><a class="dropdown-item py-2 rounded-2" href="#"><i class="bi bi-person me-2"></i> Profile</a></li>
+                        <li><a class="dropdown-item py-2 rounded-2" href="#"><i class="bi bi-gear me-2"></i> Settings</a></li>
                         <li><hr class="dropdown-divider opacity-10"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="dropdown-item py-2 text-danger">
+                                <button type="submit" class="dropdown-item py-2 rounded-2 text-danger">
                                     <i class="bi bi-box-arrow-right me-2"></i> Logout
                                 </button>
                             </form>
@@ -193,6 +225,7 @@
             </div>
         </nav>
 
+        {{-- Content Area --}}
         <main class="container-fluid p-4 p-lg-5">
             @yield('content')
         </main>
