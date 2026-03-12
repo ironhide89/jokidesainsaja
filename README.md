@@ -27,3 +27,25 @@ Jika Anda ingin menjalankan proyek ini secara lokal, ikuti langkah berikut:
    git clone [https://github.com/username-anda/jokidesainsaja.git](https://github.com/username-anda/jokidesainsaja.git)
    cd jokidesainsaja
 
+2. **Install Dependensi**
+    ```bash
+    composer install
+    npm install
+
+3. **Konfigurasi Environment**
+    ```bash
+    cp .env.example .env
+    php artisan key:generate
+
+4. **Migrasi Database**
+    ```bash
+    php artisan migrate --seed
+
+5. **Hubungkan Storage**
+    ```bash
+    php artisan storage:link
+
+6. **Jalankan Website**
+    ```bash
+    php artisan serve
+    npm run dev
